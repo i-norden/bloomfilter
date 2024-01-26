@@ -14,6 +14,10 @@ func TestBloomfilter(t *testing.T) {
 	testutils.CallSet(t, New(testutils.TestCfg))
 }
 
+func TestEjectingBloomFilter(t *testing.T) {
+	testutils.CallSetOrEject(t, New(testutils.TestCfg4))
+}
+
 func TestBloomfilter_Union_ok(t *testing.T) {
 	set1 := New(testutils.TestCfg)
 	set2 := New(testutils.TestCfg)
