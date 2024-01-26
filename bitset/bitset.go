@@ -21,12 +21,14 @@ func NewBitSet(m uint) *BitSet {
 
 // Add element to bitset
 func (bs *BitSet) Add(elem []byte) {
-	bs.bs.Set(bs.hasher(elem)[0] % bs.bs.Len())
+	_, hs := bs.hasher(elem)
+	bs.bs.Set(hs[0] % bs.bs.Len())
 }
 
 // Check element in bitset
 func (bs *BitSet) Check(elem []byte) bool {
-	return bs.bs.IsSet(bs.hasher(elem)[0] % bs.bs.Len())
+	_, hs := bs.hasher(elem)
+	return bs.bs.IsSet(hs[0] % bs.bs.Len())
 }
 
 // Union of two bitsets
