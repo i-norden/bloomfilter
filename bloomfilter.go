@@ -14,6 +14,13 @@ type Bloomfilter interface {
 	Union(interface{}) (float64, error)
 }
 
+// EjectingBloomFilter interface implemented in the different packages
+type EjectingBloomFilter interface {
+	Bloomfilter
+	CheckWithReturn([]byte) ([]byte, bool)
+	AddOrEject([]byte) ([]byte, bool)
+}
+
 // Config for bloomfilter defining the parameters:
 // P - desired false positive probability, N - number of elements to be stored in the filter and
 // HashName - the name of the particular hashfunction
