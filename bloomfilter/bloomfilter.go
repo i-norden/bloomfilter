@@ -40,7 +40,8 @@ func New(cfg bloomfilter.Config) *Bloomfilter {
 // Add an element to bloomfilter
 func (b Bloomfilter) Add(elem []byte) {
 	for _, h := range b.h {
-		for _, x := range h(elem) {
+		_, hs := h(elem)
+		for _, x := range hs {
 			b.bs.Set(x % b.m)
 		}
 	}
@@ -49,13 +50,61 @@ func (b Bloomfilter) Add(elem []byte) {
 // Check if an element is in the bloomfilter
 func (b Bloomfilter) Check(elem []byte) bool {
 	for _, h := range b.h {
-		for _, x := range h(elem) {
+		_, hs := h(elem)
+		for _, x := range hs {
 			if !b.bs.IsSet(x % b.m) {
 				return false
 			}
 		}
 	}
 	return true
+}
+
+func (b Bloomfilter) CheckWithReturn(elem []byte) ([]byte, bool) {
+	res, phs := b.h[0](elem)
+	for _, x := range phs {
+		y := x % b.m
+		if !b.bs.IsSet(y) {
+			return res, false
+		}
+	}
+	for _, h := range b.h[1:] {
+		_, hs := h(elem)
+		for _, x := range hs {
+			y := x % b.m
+			if !b.bs.IsSet(y) {
+				return res, false
+			}
+		}
+	}
+	return res, true
+}
+
+// AddOrEject adds an element to the Bloomfilter if and only if its bits are not already set
+// It returns the primary hash for the element and whether the element was added
+func (b Bloomfilter) AddOrEject(elem []byte) ([]byte, bool) {
+	set := false
+	// this is the "primary hash", return it
+	res, phs := b.h[0](elem)
+	for _, x := range phs {
+		y := x % b.m
+		if !b.bs.IsSet(y) {
+			set = true
+			b.bs.Set(y)
+		}
+	}
+	for _, h := range b.h[1:] {
+		_, hs := h(elem)
+		for _, x := range hs {
+			y := x % b.m
+			if !b.bs.IsSet(y) {
+				// if it is not set, go ahead and set
+				set = true
+				b.bs.Set(y)
+			}
+		}
+	}
+	return res, set
 }
 
 // Union of two bloomfilters
